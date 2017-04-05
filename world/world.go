@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/op/go-logging"
 )
 
@@ -22,11 +21,12 @@ type calculateDistance func(cell, cell) float64
 type Node struct {
 	pheromone PheromoneValue
 	distance  float64
-	id        int
+	id        NodeID
 }
 
 // Cell is the internal type for the representation of graph nodes
 type cell struct {
+	id         NodeID
 	ants       int
 	neighbours []NodeID
 	x          int
@@ -37,6 +37,10 @@ type cell struct {
 type nodePair struct {
 	previous NodeID
 	next     NodeID
+}
+
+func (p nodePair) invert() nodePair {
+	return nodePair{p.next, p.previous}
 }
 
 // World defines the interface with which the ants interact
@@ -58,49 +62,47 @@ type WorldImpl struct {
 // Given a NodeID returns the possible moves the ant can make from
 // that position, this includes pheromonal, distance and ID values
 // for every possible movement.
-func (w worldImpl) possibleMoves(nodeid NodeID) []Node {
-	current = getCell(nodeid)
+func (w WorldImpl) possibleMoves(nodeid NodeID) []Node {
+	current := w.getCell(nodeid)
 
-	var result [len(current)]Node
+	var result = make([]Node, len(current.neighbours))
 
 	for i, neighbour := range current.neighbours {
-		result[i].distance = w.distance(current, getCell(neighbour))
-		result[i].pheromone = w.
+		nCell := w.getCell(neighbour)
+		result[i].id = nCell.id
+		result[i].distance = w.distance(current, nCell)
+		result[i].pheromone = w.getPheromone(current.id, nCell.id)
 	}
+
+	return result
 }
 
-func (w worldImpl) updatePosition(before NodeID, after NodeID) {
+func (w WorldImpl) updatePosition(before NodeID, after NodeID) {
 
 }
 
-func (w worldImpl) putPheromone(before NodeID, after NodeID) {
+func (w WorldImpl) putPheromone(before NodeID, after NodeID) {
 
 }
 
-func (w worldImpl) getCell(node NodeID) cell {
-	// Trick to get zero value of cell, surelly the must be another way to do this
-	cellZero := cell
-
-	current := w.antMap[node]
-
-	if current != cellzero {
+func (w WorldImpl) getCell(node NodeID) cell {
+	if current, ok := w.antMap[node]; ok {
 		return current
 	}
 
-	log.Critical("Nodeid %d does not exist! Of course i can't get this cell!", nodeid)
-	return nil
+	log.Critical("Nodeid %d does not exist! Of course i can't get this cell!", node)
+	//TODO
+	panic("This should never have happened... CALL A MEDIC!")
 }
 
-func (w worldImpl) getPheromone (start NodeID, end NodeID) PheromoneValue {
-	// Trick to get zero value of , surelly the must be another way to do this
-	cellZero := cell
+func (w WorldImpl) getPheromone(start NodeID, end NodeID) PheromoneValue {
+	pair := nodePair{start, end}
+	result := PheromoneValue(0.0)
 
-	current := w.antMap[node]
-
-	if current != cellzero {
-		return current
+	if pheromone, ok := w.pheroMap[pair]; ok {
+		result = pheromone
+	} else if pheromone, ok := w.pheroMap[pair.invert()]; ok {
+		result = pheromone
 	}
-
-	log.Critical("Nodeid %d does not exist! Of course i can't get this cell!", nodeid)
-	return nil
+	return result
 }
