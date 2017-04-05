@@ -59,19 +59,13 @@ type WorldImpl struct {
 // that position, this includes pheromonal, distance and ID values
 // for every possible movement.
 func (w worldImpl) possibleMoves(nodeid NodeID) []Node {
-	// Trick to get zero value of cell, surelly the must be another way to do this
-	cellZero := cell
-	current = w.antMap[nodeid]
-
-	if current == cellzero {
-		log.Critical("Nodeid %d does not exist! Of course it has no possible moves!", nodeid)
-		return nil
-	}
+	current = getCell(nodeid)
 
 	var result [len(current)]Node
 
-	for i, neighbour := range current {
-
+	for i, neighbour := range current.neighbours {
+		result[i].distance = w.distance(current, getCell(neighbour))
+		result[i].pheromone = w.
 	}
 }
 
@@ -81,4 +75,32 @@ func (w worldImpl) updatePosition(before NodeID, after NodeID) {
 
 func (w worldImpl) putPheromone(before NodeID, after NodeID) {
 
+}
+
+func (w worldImpl) getCell(node NodeID) cell {
+	// Trick to get zero value of cell, surelly the must be another way to do this
+	cellZero := cell
+
+	current := w.antMap[node]
+
+	if current != cellzero {
+		return current
+	}
+
+	log.Critical("Nodeid %d does not exist! Of course i can't get this cell!", nodeid)
+	return nil
+}
+
+func (w worldImpl) getPheromone (start NodeID, end NodeID) PheromoneValue {
+	// Trick to get zero value of , surelly the must be another way to do this
+	cellZero := cell
+
+	current := w.antMap[node]
+
+	if current != cellzero {
+		return current
+	}
+
+	log.Critical("Nodeid %d does not exist! Of course i can't get this cell!", nodeid)
+	return nil
 }
