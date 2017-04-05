@@ -14,6 +14,7 @@ var format = logging.MustStringFormatter(
 )
 
 const initialPheromoneValue = 1
+const decayFactor = PheromoneValue(0.5)
 
 type NodeID int
 type PheromoneValue float64
@@ -97,7 +98,18 @@ func (w WorldImpl) updatePosition(before NodeID, after NodeID) {
 
 func (w WorldImpl) putPheromone(before NodeID, after NodeID) {
 	pair := nodePair{before, after}
-	w.updatedPheroMap[pair] = initialPheromoneValue
+	w.updatedPheroMap[pair] += initialPheromoneValue
+}
+
+func (w WorldImpl) updatePheromones() {
+	for pair, pheromone := range w.pheroMap {
+		pheromone *= decayFactor
+		if updatedVal, ok := w.updatedPheroMap[pair]; ok {
+			pheromone += updatedVal
+		} else if updatedVal, ok := w.updatedPheroMap[pair.invert()]; ok {
+			pheromone += updatedVal
+		}
+	}
 }
 
 func (w WorldImpl) getCell(node NodeID) cell {
