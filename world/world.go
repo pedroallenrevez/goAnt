@@ -13,6 +13,8 @@ var format = logging.MustStringFormatter(
 	`%{color}%{time:15:04:05.000} %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`,
 )
 
+const initialPheromoneValue = 1
+
 type NodeID int
 type PheromoneValue float64
 type calculateDistance func(cell, cell) float64
@@ -31,6 +33,17 @@ type cell struct {
 	neighbours []NodeID
 	x          int
 	y          int
+}
+
+// Necessary because of the way pointers to structs in maps work
+// see: http://stackoverflow.com/q/32751537
+func (c cell) incrementAnts() {
+	c.ants++
+}
+
+// See incrementAnts
+func (c cell) decrementAnts() {
+	c.ants--
 }
 
 // nodePair is an abstraction to be used as a key in the pheromone maps
@@ -78,11 +91,13 @@ func (w WorldImpl) possibleMoves(nodeid NodeID) []Node {
 }
 
 func (w WorldImpl) updatePosition(before NodeID, after NodeID) {
-
+	w.getCell(before).incrementAnts()
+	w.getCell(after).decrementAnts()
 }
 
 func (w WorldImpl) putPheromone(before NodeID, after NodeID) {
-
+	pair := nodePair{before, after}
+	w.updatedPheroMap[pair] = initialPheromoneValue
 }
 
 func (w WorldImpl) getCell(node NodeID) cell {
