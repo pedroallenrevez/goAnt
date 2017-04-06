@@ -1,13 +1,19 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"world"
+)
 
 func main() {
-	//init world
+	world := WorldImpl{}
+	world.init()
+	//define distance calculation function (maybe include default in world?)
 	//init k ants(threads)
 	//start ant threads
 	//join threads
-	//decay map
-	//updateWorld with ant routes ( shortest dist, pheromone)
+	world.updatePheromones()
+	//updateWorld with ant routes ( shortest dist, pheromone) <-- Pheromone updating is not necessary, what do you mean with updateWorld with shortest dist?
+	//^ if this refers to keeping distance tables to allow faster routing, it's not implemented
 	//ant reset
 }

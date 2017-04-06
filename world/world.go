@@ -1,4 +1,4 @@
-package main
+package world
 
 import (
 	"github.com/op/go-logging"
@@ -71,6 +71,10 @@ type WorldImpl struct {
 	pheroMap        map[nodePair]PheromoneValue
 	updatedPheroMap map[nodePair]PheromoneValue
 	distance        calculateDistance
+}
+
+func (w WorldImpl) init() {
+	log.Error("Initialization not implemented")
 }
 
 // Given a NodeID returns the possible moves the ant can make from
