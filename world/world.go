@@ -16,7 +16,10 @@ var format = logging.MustStringFormatter(
 const initialPheromoneValue = 1
 const decayFactor = PheromoneValue(0.5)
 
+// NodeID abstraction for index
 type NodeID int
+
+// PheromoneValue abstraction for float64
 type PheromoneValue float64
 type calculateDistance func(cell, cell) float64
 
@@ -64,7 +67,7 @@ type World interface {
 	putPheromone(NodeID, NodeID)
 }
 
-// Implementation of the interface World
+// WorldImpl Implementation of the interface World
 type WorldImpl struct {
 	//See what's needed
 	antMap          map[NodeID]cell
@@ -132,4 +135,14 @@ func (w WorldImpl) getPheromone(start NodeID, end NodeID) PheromoneValue {
 		result = pheromone
 	}
 	return result
+}
+
+// Create Create a blank world and return the addr
+// Factory to produce interfaces for the ants to use
+func (w worldImpl) Create() *World {
+	return &worldImpl{
+		antMap:          w.antMap,
+		pheroMap:        w.pheroMap,
+		updatedPheroMap: w.updatedPheroMap,
+	}
 }

@@ -17,7 +17,7 @@ type Ant struct {
 	distTravelled float64 // total distance travelled
 	tourComplete  bool    // ? ant reached goal
 	firstPass     bool    // ? first iteration
-	world         World   // * -> worldMap
+	world         *World  // * -> worldMap
 }
 
 //initializes ants and resets them for new iteration
@@ -72,6 +72,7 @@ func (ant *Ant) traverse(start, end int) {
 	append(ant.route, end)
 	//dist += dist callback
 	ant.distTravelled += world.calculateDistance(start, end)
+	world.updatePosition(ant.location, end)
 
 }
 
@@ -114,4 +115,8 @@ func randInt(min, max int) int {
 func randFloat() float64 {
 	rand.Seed(time.Now().Unix())
 	return rand.Float64()
+}
+
+func (ant *Ant) setWorld(w *World) {
+	ant.world = &w
 }
