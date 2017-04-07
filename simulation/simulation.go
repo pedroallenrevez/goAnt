@@ -4,7 +4,8 @@ import (
 	"engo.io/ecs"
 	"engo.io/engo"
 	"engo.io/engo/common"
-	"fmt"
+	"github.com/pedroallenrevez/goAnt/simulation/systems"
+	"image/color"
 )
 
 // BASICS:
@@ -37,42 +38,52 @@ func (*myScene) Preload() {
 // This is where you add entitites and systems
 // to the scene
 func (*myScene) Setup(world *ecs.World) {
+
+	// Input needs to be registered
+	engo.Input.RegisterButton("AddAnt", engo.F1)
+
 	common.SetBackground(color.White)
 
 	// Systems need to be added to the world
 	world.AddSystem(&common.RenderSystem{})
-	world.Addsystem(&systems.AntCreatorSystem{})
+	world.AddSystem(&common.MouseSystem{})
 
-	// Entities must be initiated
-	ant := Ant{BasicEntity: ecs.NewBasic()}
+	// Initialize custom systems last to make sure their
+	// depencies are already initialized
+	world.AddSystem(&systems.AntCreatorSystem{})
 
-	// Setting up space component
-	ant.SpaceComponent = common.SpaceComponent{
-		Position: engo.Point{10, 10},
-		Width:    303,
-		Height:   641,
-	}
+	/*
+		// Entities must be initiated
+		ant := Ant{BasicEntity: ecs.NewBasic()}
 
-	// Setting up Render Component
-
-	texture, err := common.LoadedSprite("textures/Ant.png")
-
-	if err != nil {
-		fmt.Println("Unable to load texture: " + err.Error())
-	}
-
-	ant.RenderComponent = common.RenderComponent{
-		Drawable: texture,
-		Scale:    engo.Point{1, 1},
-	}
-
-	// Adding the entity to the RenderSystem
-	for _, system := range world.Systems() {
-		switch sys := system.(type) {
-		case *common.RenderSystem:
-			sys.Add(&ant.BasicEntity, &ant.RenderComponent, &ant.SpaceComponent)
+		// Setting up space component
+		ant.SpaceComponent = common.SpaceComponent{
+			Position: engo.Point{10, 10},
+			Width:    303,
+			Height:   641,
 		}
-	}
+
+		// Setting up Render Component
+
+		texture, err := common.LoadedSprite("textures/Ant.png")
+
+		if err != nil {
+			fmt.Println("Unable to load texture: " + err.Error())
+		}
+
+		ant.RenderComponent = common.RenderComponent{
+			Drawable: texture,
+			Scale:    engo.Point{1, 1},
+		}
+
+		// Adding the entity to the RenderSystem
+		for _, system := range world.Systems() {
+			switch sys := system.(type) {
+			case *common.RenderSystem:
+				sys.Add(&ant.BasicEntity, &ant.RenderComponent, &ant.SpaceComponent)
+			}
+		}
+	*/
 
 }
 
