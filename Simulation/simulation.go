@@ -37,8 +37,11 @@ func (*myScene) Preload() {
 // This is where you add entitites and systems
 // to the scene
 func (*myScene) Setup(world *ecs.World) {
+	common.SetBackground(color.White)
+
 	// Systems need to be added to the world
 	world.AddSystem(&common.RenderSystem{})
+	world.Addsystem(&systems.AntCreatorSystem{})
 
 	// Entities must be initiated
 	ant := Ant{BasicEntity: ecs.NewBasic()}
@@ -63,6 +66,7 @@ func (*myScene) Setup(world *ecs.World) {
 		Scale:    engo.Point{1, 1},
 	}
 
+	// Adding the entity to the RenderSystem
 	for _, system := range world.Systems() {
 		switch sys := system.(type) {
 		case *common.RenderSystem:
