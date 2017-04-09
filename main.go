@@ -12,7 +12,7 @@ var impl = new(world.WorldImpl)
 var w world.World = impl
 
 //ANT
-var kants = 50
+var kants = 5
 var antArray = make([]*ants.Ant, kants)
 var ant ants.AntInterface
 
@@ -25,38 +25,36 @@ func main() {
 		distanceY := math.Abs(float64(start.Y - end.Y))
 		return math.Pow(distanceX, 2) + math.Pow(distanceY, 2)
 	}
-	w.Init(100, euclidean)
+	w.Init(5, euclidean)
+	//fmt.Println(w)
 
 	//init k ants(threads)
 	for i := 0; i < kants; i++ {
 		newAnt := ants.NewAnt(w)
 		ant = newAnt
-		antArray = append(antArray, newAnt)
+		antArray[i] = newAnt
 	}
 
 	//start ant threads
-	cha := make(chan []int)
+	cha := make(chan []world.NodeID)
 	//reset and run ants
 	fmt.Println("running ants")
-	for _, ant := range antArray {
-		//ant.Init(w)
-		ant.Run(cha)
+	for {
 
-	}
-	for i := 0; i < len(antArray); i++ {
-		//wait kAnts times receive channel
-		route := <-cha
-		//recive from channel and add to map
-		//update pheromonemap with putpheromone
-		for i := range route {
-			if i+1 <= len(route) {
-				w.PutPheromone(world.NodeID(route[i]), world.NodeID(route[i+1]))
-			}
+		for _, ant := range antArray {
+			ant.Reset()
+			fmt.Println(ant)
+			go ant.Run(cha)
 
 		}
+		//wait kAnts times receive channel
+		for i := 0; i < len(antArray); i++ {
+			route := <-cha
+			fmt.Println(route)
+			//recive from channel and add to map
 
+		}
+		w.UpdatePheromones()
 	}
-	//updateWorld with ant routes ( shortest dist, pheromone) <-- Pheromone updating is not necessary, what do you mean with updateWorld with shortest dist?
-	//w.UpdatePheromones()
 
 }

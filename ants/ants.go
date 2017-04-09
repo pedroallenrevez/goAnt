@@ -11,27 +11,26 @@ import (
 //AntInterface Specifies interactability for Ant
 type AntInterface interface {
 	Reset()
-	Run(chan []int)
+	Run(chan []world.NodeID)
 }
 
 //Ant badjriziz
 type Ant struct {
-	location      world.NodeID // present location of ant
-	route         []int        // list of navigated nodes
-	alpha         float64      // experimental value - influences pheromones
-	beta          float64      // experimental value - influences desirability
-	distTravelled float64      // total distance travelled
-	tourComplete  bool         // ? ant reached goal
-	firstPass     bool         // ? first iteration
-	world         world.World  // * -> worldMap
+	location      world.NodeID   // present location of ant
+	route         []world.NodeID // list of navigated nodes
+	alpha         float64        // experimental value - influences pheromones
+	beta          float64        // experimental value - influences desirability
+	distTravelled float64        // total distance travelled
+	tourComplete  bool           // ? ant reached goal
+	firstPass     bool           // ? first iteration
+	world         world.World    // * -> worldMap
 }
 
 //Reset reset ant for new iteration
 func (ant *Ant) Reset() {
 	ant.location = 0
 	ant.route = nil
-	ant.route = append(ant.route, 0)
-	ant.alpha = 200.0
+	ant.alpha = 0.0
 	ant.distTravelled = 0
 	ant.tourComplete = false
 	ant.firstPass = true
@@ -45,7 +44,7 @@ func NewAnt(w world.World) *Ant {
 		tourComplete: false,
 		world:        w,
 	}
-	new.route = append(new.route, 0)
+	//new.route = append(new.route, 0)
 
 	return &new
 }
@@ -58,6 +57,7 @@ func (ant *Ant) pickPath() world.Node {
 	var nodes = ant.world.PossibleMoves(ant.location)
 	if ant.firstPass {
 		//choose randomly even from all nodes
+		ant.firstPass = false
 		return nodes[randInt(0, len(nodes))]
 	}
 
@@ -88,30 +88,27 @@ func (ant *Ant) pickPath() world.Node {
 func (ant *Ant) traverse(start world.NodeID, end world.Node) {
 	ant.location = end.ID
 	//route ++ end
-	ant.route = append(ant.route, int(end.ID))
+	ant.route = append(ant.route, end.ID)
 	//dist += dist callback
 	ant.distTravelled += end.Distance
 	ant.world.UpdatePosition(ant.location, end.ID)
 
 }
 
-//TODO - is goal function!
+// if this node is a goal complete route
 func (ant *Ant) isGoal(node world.NodeID) {
+
 	if ant.world.IsGoal(node) {
+		fmt.Print("route switch")
 		ant.tourComplete = true
 	}
-	//channel trigger
 }
 
 //Run returns a list of node ids
-func (ant *Ant) Run(channel chan []int) {
+func (ant *Ant) Run(channel chan []world.NodeID) {
 	//GO ROUTINE
 	//run until tour is complete
-	fmt.Println("danger zone")
-	fmt.Print("tour is")
-	fmt.Println(ant.tourComplete)
 	for !ant.tourComplete {
-		fmt.Println("im in")
 		//next node
 		var next = ant.pickPath()
 		ant.traverse(ant.location, next)
@@ -119,6 +116,13 @@ func (ant *Ant) Run(channel chan []int) {
 	}
 	//loop deletion
 	//put pheromone
+
+	for i := range ant.route {
+		if i+1 <= len(ant.route) {
+			ant.world.PutPheromone(ant.route[i], ant.route[i+1])
+		}
+
+	}
 	channel <- ant.route
 }
 
