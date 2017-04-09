@@ -111,14 +111,18 @@ func (w *WorldImpl) Init(size int, funcArg func(Point, Point) float64) {
 			slice = append(slice, concatInt(x-1, y))
 			if y-1 >= 0 {
 				slice = append(slice, concatInt(x-1, y-1))
-				slice = append(slice, concatInt(x, y-1))
 
 			}
 			if y+1 <= size-1 {
 				slice = append(slice, concatInt(x-1, y+1))
-				slice = append(slice, concatInt(x, y+1))
 			}
 
+		}
+		if y-1 >= 0 {
+			slice = append(slice, concatInt(x, y-1))
+		}
+		if y+1 <= size-1 {
+			slice = append(slice, concatInt(x, y+1))
 		}
 		if x+1 <= size-1 {
 			slice = append(slice, concatInt(x+1, y))
