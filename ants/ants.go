@@ -1,12 +1,18 @@
 package ants
 
 import (
-	//"fmt"
+	"fmt"
 	"github.com/pedroallenrevez/goAnt/world"
 	"math"
 	"math/rand"
 	"time"
 )
+
+//AntInterface Specifies interactability for Ant
+type AntInterface interface {
+	Reset()
+	Run(chan []int)
+}
 
 //Ant badjriziz
 type Ant struct {
@@ -20,16 +26,28 @@ type Ant struct {
 	world         world.World  // * -> worldMap
 }
 
-//initializes ants and resets them for new iteration
-func (ant *Ant) init(w world.World) {
+//Reset reset ant for new iteration
+func (ant *Ant) Reset() {
 	ant.location = 0
 	ant.route = nil
 	ant.route = append(ant.route, 0)
-	ant.alpha = 1.0
+	ant.alpha = 200.0
 	ant.distTravelled = 0
 	ant.tourComplete = false
-	ant.world = w
-	//set world
+	ant.firstPass = true
+}
+
+//NewAnt constructor for a new ant
+func NewAnt(w world.World) *Ant {
+	new := Ant{
+		alpha:        1.0,
+		firstPass:    true,
+		tourComplete: false,
+		world:        w,
+	}
+	new.route = append(new.route, 0)
+
+	return &new
 }
 
 // pickPath
@@ -85,17 +103,23 @@ func (ant *Ant) isGoal(node world.NodeID) {
 	//channel trigger
 }
 
-// returns a list of node ids
-func (ant *Ant) run() []int {
+//Run returns a list of node ids
+func (ant *Ant) Run(channel chan []int) {
 	//GO ROUTINE
 	//run until tour is complete
+	fmt.Println("danger zone")
+	fmt.Print("tour is")
+	fmt.Println(ant.tourComplete)
 	for !ant.tourComplete {
+		fmt.Println("im in")
 		//next node
 		var next = ant.pickPath()
 		ant.traverse(ant.location, next)
 		ant.isGoal(next.ID)
 	}
-	return ant.route
+	//loop deletion
+	//put pheromone
+	channel <- ant.route
 }
 
 func randInt(min, max int) int {

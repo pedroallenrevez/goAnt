@@ -2,6 +2,7 @@ package world
 
 import (
 	"github.com/op/go-logging"
+	"strconv"
 )
 
 var log = logging.MustGetLogger("example")
@@ -25,8 +26,7 @@ type calculateDistance func(Point, Point) float64
 
 // Point abstraction for calculating distances
 type Point struct {
-	x int
-	y int
+	X, Y int
 }
 
 // Node is returned to the ant when possibleMoves is called
@@ -71,7 +71,9 @@ type World interface {
 	PossibleMoves(NodeID) []Node
 	UpdatePosition(NodeID, NodeID)
 	PutPheromone(NodeID, NodeID)
+	UpdatePheromones()
 	IsGoal(NodeID) bool
+	Init(int, func(Point, Point) float64)
 }
 
 // WorldImpl Implementation of the interface World
@@ -83,8 +85,69 @@ type WorldImpl struct {
 	distance        calculateDistance
 }
 
-func (w WorldImpl) init() {
-	log.Error("Initialization not implemented")
+//Init Initializes world with matrix size and a distance function
+func (w *WorldImpl) Init(size int, funcArg func(Point, Point) float64) {
+	//generate antMap
+	antMap := make(map[NodeID]cell, size*size)
+
+	concatInt := func(x, y int) NodeID {
+		i, err := strconv.Atoi(strconv.Itoa(x) + strconv.Itoa(y))
+		if err != nil {
+			panic("could not convert indexes")
+		}
+		return NodeID(i)
+	}
+	calcNeighbours := func(x, y, size int) []NodeID {
+		slice := make([]NodeID, 8)
+		if x-1 >= 0 {
+			// -1 -1  -1 0  -1 1
+			slice = append(slice, concatInt(x-1, y))
+			if y-1 >= 0 {
+				slice = append(slice, concatInt(x-1, y-1))
+				slice = append(slice, concatInt(x, y-1))
+
+			}
+			if y+1 <= size-1 {
+				slice = append(slice, concatInt(x-1, y+1))
+				slice = append(slice, concatInt(x, y+1))
+			}
+
+		}
+		if x+1 <= size-1 {
+			slice = append(slice, concatInt(x+1, y))
+			if y-1 >= 0 {
+				slice = append(slice, concatInt(x+1, y-1))
+			}
+			if y+1 <= size-1 {
+				slice = append(slice, concatInt(x+1, y+1))
+			}
+
+		}
+		return slice
+
+	}
+
+	for x := 0; x < size-1; x++ {
+		for y := 0; y < size-1; y++ {
+			index := concatInt(x, y)
+			newCell := cell{
+				id:         index,
+				ants:       0,
+				x:          x,
+				y:          y,
+				neighbours: calcNeighbours(x, y, size),
+			}
+			antMap[index] = newCell
+
+		}
+	}
+	w.antMap = antMap
+	//generate according size pheroMap map nodepair -> pheromone
+	w.pheroMap = make(map[nodePair]PheromoneValue)
+	w.updatedPheroMap = make(map[nodePair]PheromoneValue)
+	w.distance = funcArg
+	//copy one to updatedPheroMap
+	//assign function
 }
 
 // PossibleMoves Given a NodeID returns the possible moves the ant can make from
@@ -106,7 +169,7 @@ func (w *WorldImpl) PossibleMoves(nodeid NodeID) []Node {
 }
 
 // UpdatePosition Used by the ants to update their position on map
-func (w WorldImpl) UpdatePosition(before NodeID, after NodeID) {
+func (w *WorldImpl) UpdatePosition(before NodeID, after NodeID) {
 	w.getCell(before).incrementAnts()
 	w.getCell(after).decrementAnts()
 }
@@ -115,19 +178,20 @@ func (w WorldImpl) UpdatePosition(before NodeID, after NodeID) {
 // not needed for ant
 // ant will return route on run. just process route and deposit pheromone then
 // can be used by real time ants
-func (w WorldImpl) PutPheromone(before NodeID, after NodeID) {
+func (w *WorldImpl) PutPheromone(before NodeID, after NodeID) {
 	pair := nodePair{before, after}
 	w.updatedPheroMap[pair] += initialPheromoneValue
 }
 
 // IsGoal Returns true if the given node is a goal node
-func (w WorldImpl) IsGoal(node NodeID) bool {
+func (w *WorldImpl) IsGoal(node NodeID) bool {
 	log.Error("not yet implemented")
 	return false
 
 }
 
-func (w WorldImpl) updatePheromones() {
+// UpdatePheromones decays the map with decay constant
+func (w *WorldImpl) UpdatePheromones() {
 	for pair, pheromone := range w.pheroMap {
 		pheromone *= decayFactor
 		if updatedVal, ok := w.updatedPheroMap[pair]; ok {
@@ -138,7 +202,7 @@ func (w WorldImpl) updatePheromones() {
 	}
 }
 
-func (w WorldImpl) getCell(node NodeID) cell {
+func (w *WorldImpl) getCell(node NodeID) cell {
 	if current, ok := w.antMap[node]; ok {
 		return current
 	}
@@ -148,7 +212,7 @@ func (w WorldImpl) getCell(node NodeID) cell {
 	panic("This should never have happened... CALL A MEDIC!")
 }
 
-func (w WorldImpl) getPheromone(start NodeID, end NodeID) PheromoneValue {
+func (w *WorldImpl) getPheromone(start NodeID, end NodeID) PheromoneValue {
 	pair := nodePair{start, end}
 	result := PheromoneValue(0.0)
 
@@ -160,17 +224,7 @@ func (w WorldImpl) getPheromone(start NodeID, end NodeID) PheromoneValue {
 	return result
 }
 
-// Create Create a blank world and return the addr
-// Factory to produce interfaces for the ants to use
-//func (w worldImpl) Create() *World {
-//	return &worldImpl{
-//		antMap:          w.antMap,
-//		pheroMap:        w.pheroMap,
-//		updatedPheroMap: w.updatedPheroMap,
-//	}
-//}
-
-func (w WorldImpl) computeDistance(start, end cell) float64 {
+func (w *WorldImpl) computeDistance(start, end cell) float64 {
 	p1 := Point{start.x, start.y}
 	p2 := Point{end.x, end.y}
 	return w.distance(p1, p2)
