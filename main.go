@@ -4,41 +4,59 @@ import (
 	"fmt"
 	"github.com/pedroallenrevez/goAnt/ants"
 	"github.com/pedroallenrevez/goAnt/world"
+	"math"
 )
 
+//WORLD
+var impl = new(world.WorldImpl)
+var w world.World = impl
+
+//ANT
+var kants = 50
+var antArray = make([]*ants.Ant, kants)
+var ant ants.AntInterface
+
+//EXPORT MATRIX
+
 func main() {
-	//add argv support
-	//numbers of ants
-	kants := 50
-	ants := make([]Ant, kants)
-	//init world
-	/*
-	   var a IFace
-	   a = Create()
-	   a.SetSomeField("World")
-	   fmt.Println(a.GetSomeField())
-	*/
-	var world World
-	worldImpl := WorldImpl{}
-	world.init()
-	world = worldImpl
-	fmt.Println("Begin ant creation")
-	for i = 0; i < kants; i++ {
-		// new -> allocates a zero value of type T and returns pointer
-		newAnt := new(Ant)
-		newAnt.init(world)
-		append(ants, newAnt)
+	//distance callback
+	euclidean := func(start, end world.Point) float64 {
+		distanceX := math.Abs(float64(start.X - end.X))
+		distanceY := math.Abs(float64(start.Y - end.Y))
+		return math.Pow(distanceX, 2) + math.Pow(distanceY, 2)
+	}
+	w.Init(100, euclidean)
+
+	//init k ants(threads)
+	for i := 0; i < kants; i++ {
+		newAnt := ants.NewAnt(w)
+		ant = newAnt
+		antArray = append(antArray, newAnt)
 	}
 
-	euclidean := func(start, end Point) float64 {
-		return math.Pow(start.x-end.x, 2) + math.Pow(start.y-end.y, 2)
-	}
-	//define distance calculation function (maybe include default in world?)
-	//init k ants(threads)
 	//start ant threads
-	//join threads
-	//world.updatePheromones()
+	cha := make(chan []int)
+	//reset and run ants
+	fmt.Println("running ants")
+	for _, ant := range antArray {
+		//ant.Init(w)
+		ant.Run(cha)
+
+	}
+	for i := 0; i < len(antArray); i++ {
+		//wait kAnts times receive channel
+		route := <-cha
+		//recive from channel and add to map
+		//update pheromonemap with putpheromone
+		for i := range route {
+			if i+1 <= len(route) {
+				w.PutPheromone(world.NodeID(route[i]), world.NodeID(route[i+1]))
+			}
+
+		}
+
+	}
 	//updateWorld with ant routes ( shortest dist, pheromone) <-- Pheromone updating is not necessary, what do you mean with updateWorld with shortest dist?
-	//^ if this refers to keeping distance tables to allow faster routing, it's not implemented
-	//ant reset
+	//w.UpdatePheromones()
+
 }
