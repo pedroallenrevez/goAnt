@@ -1,2 +1,5 @@
 #MACOSX
 *.DS_STORE
+
+#VIM
+*.swp

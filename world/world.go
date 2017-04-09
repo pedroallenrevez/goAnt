@@ -2,6 +2,7 @@ package world
 
 import (
 	"github.com/op/go-logging"
+	"math/rand"
 	"strconv"
 )
 
@@ -41,19 +42,24 @@ type cell struct {
 	id         NodeID
 	ants       int
 	neighbours []NodeID
+	goal       bool
 	x          int
 	y          int
 }
 
 // Necessary because of the way pointers to structs in maps work
 // see: http://stackoverflow.com/q/32751537
-func (c cell) incrementAnts() {
+func (c *cell) incrementAnts() {
 	c.ants++
 }
 
 // See incrementAnts
-func (c cell) decrementAnts() {
+func (c *cell) decrementAnts() {
 	c.ants--
+}
+
+func (c *cell) setGoal() {
+	c.goal = true
 }
 
 // nodePair is an abstraction to be used as a key in the pheromone maps
@@ -79,7 +85,7 @@ type World interface {
 // WorldImpl Implementation of the interface World
 type WorldImpl struct {
 	//See what's needed
-	antMap          map[NodeID]cell
+	antMap          map[NodeID]*cell
 	pheroMap        map[nodePair]PheromoneValue
 	updatedPheroMap map[nodePair]PheromoneValue
 	distance        calculateDistance
@@ -87,8 +93,8 @@ type WorldImpl struct {
 
 //Init Initializes world with matrix size and a distance function
 func (w *WorldImpl) Init(size int, funcArg func(Point, Point) float64) {
-	//generate antMap
-	antMap := make(map[NodeID]cell, size*size)
+	//generate aNtMap
+	antMap := make(map[NodeID]*cell)
 
 	concatInt := func(x, y int) NodeID {
 		i, err := strconv.Atoi(strconv.Itoa(x) + strconv.Itoa(y))
@@ -97,8 +103,9 @@ func (w *WorldImpl) Init(size int, funcArg func(Point, Point) float64) {
 		}
 		return NodeID(i)
 	}
+
 	calcNeighbours := func(x, y, size int) []NodeID {
-		slice := make([]NodeID, 8)
+		slice := make([]NodeID, 0, 8)
 		if x-1 >= 0 {
 			// -1 -1  -1 0  -1 1
 			slice = append(slice, concatInt(x-1, y))
@@ -130,17 +137,23 @@ func (w *WorldImpl) Init(size int, funcArg func(Point, Point) float64) {
 	for x := 0; x < size-1; x++ {
 		for y := 0; y < size-1; y++ {
 			index := concatInt(x, y)
-			newCell := cell{
+			antMap[index] = &cell{
 				id:         index,
 				ants:       0,
 				x:          x,
 				y:          y,
 				neighbours: calcNeighbours(x, y, size),
 			}
-			antMap[index] = newCell
 
 		}
 	}
+
+	//set one cell as goal
+	goal := concatInt(rand.Intn(size-1), rand.Intn(size-1))
+	antMap[goal].setGoal()
+	log.Warning("Goal is ", goal)
+	log.Warning(antMap[goal].goal)
+
 	w.antMap = antMap
 	//generate according size pheroMap map nodepair -> pheromone
 	w.pheroMap = make(map[nodePair]PheromoneValue)
@@ -185,8 +198,7 @@ func (w *WorldImpl) PutPheromone(before NodeID, after NodeID) {
 
 // IsGoal Returns true if the given node is a goal node
 func (w *WorldImpl) IsGoal(node NodeID) bool {
-	log.Error("not yet implemented")
-	return false
+	return w.getCell(node).goal
 
 }
 
@@ -202,7 +214,7 @@ func (w *WorldImpl) UpdatePheromones() {
 	}
 }
 
-func (w *WorldImpl) getCell(node NodeID) cell {
+func (w *WorldImpl) getCell(node NodeID) *cell {
 	if current, ok := w.antMap[node]; ok {
 		return current
 	}
@@ -224,7 +236,7 @@ func (w *WorldImpl) getPheromone(start NodeID, end NodeID) PheromoneValue {
 	return result
 }
 
-func (w *WorldImpl) computeDistance(start, end cell) float64 {
+func (w *WorldImpl) computeDistance(start, end *cell) float64 {
 	p1 := Point{start.x, start.y}
 	p2 := Point{end.x, end.y}
 	return w.distance(p1, p2)
