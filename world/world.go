@@ -154,6 +154,9 @@ func (w *WorldImpl) Init(size int, funcArg func(Point, Point) float64) {
 	log.Warning("Goal is ", goal)
 	log.Warning(antMap[goal].goal)
 
+	for _, cell := range antMap {
+		log.Debug(*cell)
+	}
 	w.antMap = antMap
 	//generate according size pheroMap map nodepair -> pheromone
 	w.pheroMap = make(map[nodePair]PheromoneValue)

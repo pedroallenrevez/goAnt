@@ -12,7 +12,7 @@ var impl = new(world.WorldImpl)
 var w world.World = impl
 
 //ANT
-var kants = 5
+var kants = 1
 var antArray = make([]*ants.Ant, kants)
 var ant ants.AntInterface
 

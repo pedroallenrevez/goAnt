@@ -56,6 +56,7 @@ func (ant *Ant) pickPath() world.Node {
 	// if node not connected to anyone but last
 	var nodes = ant.world.PossibleMoves(ant.location)
 	if ant.firstPass {
+		fmt.Println(nodes)
 		//choose randomly even from all nodes
 		ant.firstPass = false
 		return nodes[randInt(0, len(nodes))]
@@ -63,10 +64,10 @@ func (ant *Ant) pickPath() world.Node {
 
 	interval := make([]float64, len(nodes))
 	accumulate := 0.0
-	for _, node := range nodes {
+	for i, node := range nodes {
 		probability := math.Pow(float64(node.Pheromone), ant.alpha) * //priori
 			math.Pow(1.0/node.Distance, ant.beta) //posterior
-		interval = append(interval, probability)
+		interval[i] = probability
 		accumulate += probability
 	}
 	random := randFloat() * accumulate
@@ -111,6 +112,7 @@ func (ant *Ant) Run(channel chan []world.NodeID) {
 	for !ant.tourComplete {
 		//next node
 		var next = ant.pickPath()
+		//fmt.Println(next)
 		ant.traverse(ant.location, next)
 		ant.isGoal(next.ID)
 	}
