@@ -79,6 +79,7 @@ type World interface {
 	PutPheromone(NodeID, NodeID)
 	UpdatePheromones()
 	IsGoal(NodeID) bool
+	ExportMap() [][]int
 	Init(int, func(Point, Point) float64)
 }
 
@@ -158,10 +159,11 @@ func (w *WorldImpl) Init(size int, funcArg func(Point, Point) float64) {
 	log.Warning("Goal is ", goal)
 	log.Warning(antMap[goal].goal)
 
-	for _, cell := range antMap {
-		log.Debug(*cell)
-	}
 	w.antMap = antMap
+
+	for _, cell := range w.ExportMap() {
+		log.Debug(cell)
+	}
 	//generate according size pheroMap map nodepair -> pheromone
 	w.pheroMap = make(map[nodePair]PheromoneValue)
 	w.updatedPheroMap = make(map[nodePair]PheromoneValue)
@@ -247,4 +249,41 @@ func (w *WorldImpl) computeDistance(start, end *cell) float64 {
 	p1 := Point{start.x, start.y}
 	p2 := Point{end.x, end.y}
 	return w.distance(p1, p2)
+}
+
+func (w WorldImpl) ExportMap() [][]int {
+	if w.antMap == nil {
+		panic("No map yet, CANT EXPORT!")
+	}
+
+	size := 0
+
+	for _, cell := range w.antMap {
+		if cell.x > size {
+			size = cell.x
+		}
+		if cell.y > size {
+			size = cell.y
+		}
+	}
+
+	log.Debug("AntMap has size:", size)
+
+	result := make([][]int, size+1)
+
+	for i := range result {
+		result[i] = make([]int, size+1)
+	}
+
+	for _, cell := range w.antMap {
+		// if goal = 1, normal = 0, obstacle = 2
+		if cell.goal {
+			result[cell.x][cell.y] = 1
+		} else {
+			result[cell.x][cell.y] = 0
+		}
+	}
+
+	return result
+
 }
