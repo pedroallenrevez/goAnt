@@ -1,12 +1,14 @@
 package main
 
 import (
-	"fmt"
-	"github.com/pedroallenrevez/goAnt/ants"
-	"github.com/pedroallenrevez/goAnt/world"
-	"math"
+	//"fmt"
+	//"github.com/pedroallenrevez/goAnt/ants"
+	//"github.com/pedroallenrevez/goAnt/world"
+	//"math"
+	"github.com/pedroallenrevez/goAnt/aco"
 )
 
+/*
 //WORLD
 var impl = new(world.WorldImpl)
 var w world.World = impl
@@ -57,12 +59,18 @@ func main() {
 					w.PutPheromone(route[i], route[i+1])
 				}
 			}
-			fmt.Println(len(route))
-			//recive from channel and add to map
 
 		}
 		w.UpdatePheromones()
-		fmt.Println(iter)
 	}
 
+}
+*/
+
+func main() {
+	var impl = new(aco.AntColonyOptimization)
+	var aco aco.ACOInterface = impl
+	//kants, size, iter
+	aco.Init(5, 20, 10)
+	aco.Run()
 }
