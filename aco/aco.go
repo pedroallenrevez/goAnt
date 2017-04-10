@@ -12,15 +12,16 @@ type ACOInterface interface {
 	//kants, size, iterations
 	Init(kants, size, iterations int)
 	Run()
-	ExportMap()
-	ExportRoutes()
+	ExportMap() ([][]int, map[int][2]int)
+	ExportRoutes() [][][]int
 }
 
 //AntColonyOptimization struct for the algorithm
 type AntColonyOptimization struct {
-	world      world.World
-	antArray   []*ants.Ant
-	iterations int
+	world       world.World
+	antArray    []*ants.Ant
+	iterations  int
+	routeMatrix [][][]int
 }
 
 //Init initializes the ACO
@@ -47,6 +48,15 @@ func (aco *AntColonyOptimization) Init(kants, size, iterations int) {
 		newAnt := ants.NewAnt(w)
 		antArray[i] = newAnt
 	}
+
+	//route matrix init
+	aco.routeMatrix = make([][][]int, kants)
+	for i := range aco.routeMatrix {
+		aco.routeMatrix[i] = make([][]int, iterations)
+		for j := range aco.routeMatrix[i] {
+			aco.routeMatrix[i][j] = make([]int, 0)
+		}
+	}
 	aco.antArray = antArray
 	aco.world = w
 	aco.iterations = iterations
@@ -57,7 +67,7 @@ func (aco *AntColonyOptimization) Run() {
 	cha := make(chan []world.NodeID)
 	//reset and run ants
 	fmt.Println("running ants")
-	for iter := 0; iter <= aco.iterations; iter++ {
+	for iter := 0; iter < aco.iterations; iter++ {
 
 		for _, ant := range aco.antArray {
 			ant.Reset()
@@ -68,7 +78,10 @@ func (aco *AntColonyOptimization) Run() {
 		//wait kAnts times receive channel
 		for k := 0; k < len(aco.antArray); k++ {
 			route := <-cha
-			for i := range route {
+			//var intRoute []int
+			for i, val := range route {
+				//intRoute = append(intRoute, int(val))
+				aco.routeMatrix[k][iter] = append(aco.routeMatrix[k][iter], int(val))
 				if i+1 < len(route) {
 					aco.world.PutPheromone(route[i], route[i+1])
 				}
@@ -80,7 +93,12 @@ func (aco *AntColonyOptimization) Run() {
 }
 
 //ExportMap exports the map used by the algorithm to use in the simulation
-func (aco AntColonyOptimization) ExportMap() {}
+func (aco AntColonyOptimization) ExportMap() ([][]int, map[int][2]int) {
+	return aco.world.ExportMap()
+}
 
 //ExportRoutes exports a matrix of routes for the simulator to play
-func (aco AntColonyOptimization) ExportRoutes() {}
+func (aco AntColonyOptimization) ExportRoutes() [][][]int {
+	//order of routes is cagative for simulation
+	return aco.routeMatrix
+}

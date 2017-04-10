@@ -78,7 +78,7 @@ type World interface {
 	PutPheromone(NodeID, NodeID)
 	UpdatePheromones()
 	IsGoal(NodeID) bool
-	ExportMap() [][]int
+	ExportMap() ([][]int, map[int][2]int)
 	Init(int, func(Point, Point) float64)
 }
 
@@ -164,8 +164,8 @@ func (w *WorldImpl) Init(size int, funcArg func(Point, Point) float64) {
 	for _, cell := range w.antMap {
 		log.Debug(*cell)
 	}
-
-	for _, cell := range w.ExportMap() {
+	mappins, _ := w.ExportMap()
+	for _, cell := range mappins {
 		log.Debug(cell)
 	}
 	//generate according size pheroMap map nodepair -> pheromone
@@ -249,13 +249,17 @@ func (w *WorldImpl) getPheromone(start NodeID, end NodeID) PheromoneValue {
 	return result
 }
 
-func (w *WorldImpl) computeDistance(start, end *cell) float64 {
+func (w WorldImpl) computeDistance(start, end *cell) float64 {
 	p1 := Point{start.x, start.y}
 	p2 := Point{end.x, end.y}
 	return w.distance(p1, p2)
 }
 
-func (w WorldImpl) ExportMap() [][]int {
+// ExportMap exports the graph used by the ants, mapping it to a bidimensional
+// array. Also returns a map for the simulation to access the nodes according
+// to identifier
+func (w WorldImpl) ExportMap() ([][]int, map[int][2]int) {
+	hashtable := make(map[int][2]int)
 	if w.antMap == nil {
 		panic("No map yet, CANT EXPORT!")
 	}
@@ -281,6 +285,7 @@ func (w WorldImpl) ExportMap() [][]int {
 
 	for _, cell := range w.antMap {
 		// if goal = 1, normal = 0, obstacle = 2
+		hashtable[int(cell.id)] = [2]int{cell.x, cell.y}
 		if cell.goal {
 			result[cell.x][cell.y] = 1
 		} else {
@@ -288,6 +293,6 @@ func (w WorldImpl) ExportMap() [][]int {
 		}
 	}
 
-	return result
+	return result, hashtable
 
 }
