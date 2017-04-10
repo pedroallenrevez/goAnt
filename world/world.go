@@ -3,7 +3,6 @@ package world
 import (
 	"github.com/op/go-logging"
 	"math/rand"
-	"strconv"
 )
 
 var log = logging.MustGetLogger("example")
@@ -97,41 +96,42 @@ func (w *WorldImpl) Init(size int, funcArg func(Point, Point) float64) {
 	//generate aNtMap
 	antMap := make(map[NodeID]*cell)
 
-	concatInt := func(x, y int) NodeID {
-		i, err := strconv.Atoi(strconv.Itoa(x) + strconv.Itoa(y))
-		if err != nil {
-			panic("could not convert indexes")
-		}
-		return NodeID(i)
+	//starts at -1 so ID 0 is the first
+	startingID := -1
+
+	createUniqueID := func() NodeID {
+		startingID++
+		return NodeID(startingID)
 	}
 
-	calcNeighbours := func(x, y, size int) []NodeID {
+	calcNeighbours := func(x, y, size int, node int) []NodeID {
 		slice := make([]NodeID, 0, 8)
 		if x-1 >= 0 {
-			// -1 -1  -1 0  -1 1
-			slice = append(slice, concatInt(x-1, y))
+			//This math is boring, trust me, as long as they are generated
+			//1 line at a time, this is correct ;)
+			slice = append(slice, NodeID(node-1))
 			if y-1 >= 0 {
-				slice = append(slice, concatInt(x-1, y-1))
+				slice = append(slice, NodeID(node-size-1))
 
 			}
 			if y+1 <= size-1 {
-				slice = append(slice, concatInt(x-1, y+1))
+				slice = append(slice, NodeID(node+size-1))
 			}
 
 		}
 		if y-1 >= 0 {
-			slice = append(slice, concatInt(x, y-1))
+			slice = append(slice, NodeID(node-size))
 		}
 		if y+1 <= size-1 {
-			slice = append(slice, concatInt(x, y+1))
+			slice = append(slice, NodeID(node+size))
 		}
 		if x+1 <= size-1 {
-			slice = append(slice, concatInt(x+1, y))
+			slice = append(slice, NodeID(node+1))
 			if y-1 >= 0 {
-				slice = append(slice, concatInt(x+1, y-1))
+				slice = append(slice, NodeID(node-size+1))
 			}
 			if y+1 <= size-1 {
-				slice = append(slice, concatInt(x+1, y+1))
+				slice = append(slice, NodeID(node+size+1))
 			}
 
 		}
@@ -139,27 +139,31 @@ func (w *WorldImpl) Init(size int, funcArg func(Point, Point) float64) {
 
 	}
 
-	for x := 0; x < size; x++ {
-		for y := 0; y < size; y++ {
-			index := concatInt(x, y)
+	for y := 0; y < size; y++ {
+		for x := 0; x < size; x++ {
+			index := createUniqueID()
 			antMap[index] = &cell{
 				id:         index,
 				ants:       0,
 				x:          x,
 				y:          y,
-				neighbours: calcNeighbours(x, y, size),
+				neighbours: calcNeighbours(x, y, size, int(index)),
 			}
 
 		}
 	}
 
 	//set one cell as goal
-	goal := concatInt(rand.Intn(size-1), rand.Intn(size-1))
+	goal := NodeID(rand.Intn(startingID - 1))
 	antMap[goal].setGoal()
 	log.Warning("Goal is ", goal)
 	log.Warning(antMap[goal].goal)
 
 	w.antMap = antMap
+
+	for _, cell := range w.antMap {
+		log.Debug(*cell)
+	}
 
 	for _, cell := range w.ExportMap() {
 		log.Debug(cell)
