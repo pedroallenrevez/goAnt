@@ -16,7 +16,8 @@ type AntInterface interface {
 
 //Ant badjriziz
 type Ant struct {
-	location      world.NodeID   // present location of ant
+	location      world.NodeID // present location of ant
+	previous      world.NodeID
 	route         []world.NodeID // list of navigated nodes
 	alpha         float64        // experimental value - influences pheromones
 	beta          float64        // experimental value - influences desirability
@@ -55,6 +56,7 @@ func (ant *Ant) pickPath() world.Node {
 	// termination cases
 	// if node not connected to anyone but last
 	var nodes = ant.world.PossibleMoves(ant.location)
+	// possible moves - previous
 	if ant.firstPass {
 		fmt.Println(nodes)
 		//choose randomly even from all nodes
@@ -87,6 +89,7 @@ func (ant *Ant) pickPath() world.Node {
 // traverse
 // updates position on map and ant, updates route, update distance
 func (ant *Ant) traverse(start world.NodeID, end world.Node) {
+	ant.previous = ant.location
 	ant.location = end.ID
 	//route ++ end
 	ant.route = append(ant.route, end.ID)
