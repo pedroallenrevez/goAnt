@@ -13,6 +13,7 @@ var w world.World = impl
 
 //ANT
 var kants = 1
+var iterations = 10
 var antArray = make([]*ants.Ant, kants)
 var ant ants.AntInterface
 
@@ -25,7 +26,7 @@ func main() {
 		distanceY := math.Abs(float64(start.Y - end.Y))
 		return math.Pow(distanceX, 2) + math.Pow(distanceY, 2)
 	}
-	w.Init(5, euclidean)
+	w.Init(20, euclidean)
 	//fmt.Println(w)
 
 	//init k ants(threads)
@@ -39,22 +40,29 @@ func main() {
 	cha := make(chan []world.NodeID)
 	//reset and run ants
 	fmt.Println("running ants")
-	for {
+	for iter := 0; iter <= iterations; iter++ {
 
 		for _, ant := range antArray {
 			ant.Reset()
-			fmt.Println(ant)
+			//fmt.Println(ant)
 			go ant.Run(cha)
 
 		}
 		//wait kAnts times receive channel
 		for i := 0; i < len(antArray); i++ {
 			route := <-cha
-			fmt.Println(route)
+
+			for i := range route {
+				if i+1 < len(route) {
+					w.PutPheromone(route[i], route[i+1])
+				}
+			}
+			fmt.Println(len(route))
 			//recive from channel and add to map
 
 		}
 		w.UpdatePheromones()
+		fmt.Println(iter)
 	}
 
 }
