@@ -138,8 +138,8 @@ func (w *WorldImpl) Init(size int, funcArg func(Point, Point) float64) {
 
 	}
 
-	for x := 0; x < size-1; x++ {
-		for y := 0; y < size-1; y++ {
+	for x := 0; x < size; x++ {
+		for y := 0; y < size; y++ {
 			index := concatInt(x, y)
 			antMap[index] = &cell{
 				id:         index,
@@ -226,7 +226,7 @@ func (w *WorldImpl) getCell(node NodeID) *cell {
 		return current
 	}
 
-	log.Critical("Nodeid %d does not exist! Of course i can't get this cell!", node)
+	log.Critical("Nodeid", node, " does not exist! Of course i can't get this cell!")
 	//TODO
 	panic("This should never have happened... CALL A MEDIC!")
 }
