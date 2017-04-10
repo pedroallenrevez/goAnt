@@ -42,7 +42,7 @@ func (sc *myScene) Setup(world *ecs.World) {
 	// Input needs to be registered
 	// engo.Input.RegisterButton("AddAnt", engo.F1)
 
-	common.SetBackground(color.White)
+	common.SetBackground(color.Black)
 
 	// Systems need to be added to the world
 	world.AddSystem(&common.RenderSystem{})
@@ -51,6 +51,7 @@ func (sc *myScene) Setup(world *ecs.World) {
 	// Initialize custom systems last to make sure their
 	// depencies are already initialized
 	// world.AddSystem(&systems.AntCreatorSystem{})
+	world.AddSystem(&systems.PainterSystem{})
 	world.AddSystem(&systems.MapCreatorSystem{})
 }
 

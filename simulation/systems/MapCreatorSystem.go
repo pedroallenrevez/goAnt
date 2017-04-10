@@ -6,6 +6,7 @@ import (
 	"engo.io/engo/common"
 	"fmt"
 	"github.com/pedroallenrevez/goAnt/world"
+	"image/color"
 )
 
 /*
@@ -36,6 +37,22 @@ type MapCell struct {
 	ecs.BasicEntity
 	common.RenderComponent
 	common.SpaceComponent
+	CellComponent
+}
+
+const (
+	NORMAL = iota
+	GOAL
+	NEST
+	OBSTACLE
+)
+
+// This type is a component to be added to cells
+// represents some info
+type CellComponent struct {
+	ants      int
+	pheromone float32
+	cellType  int
 }
 
 // Called when entity is removed from the world so
@@ -71,12 +88,12 @@ func (mcs *MapCreatorSystem) New(ecsWorld *ecs.World) {
 	for x := range mcs.cellMap {
 		for y := range mcs.cellMap[x] {
 			//calculate x and y depending on number of cells
-			newCell(ecsWorld, engo.Point{(engo.WindowWidth() / (2 * float32(len(mcs.cellMap)))) * float32((x*2 + 1)), (engo.WindowHeight() / (2 * float32(len(mcs.cellMap[x])))) * float32((y*2 + 1))}, size)
+			newCell(ecsWorld, engo.Point{(engo.WindowWidth() / (2 * float32(len(mcs.cellMap)))) * float32((x*2 + 1)), (engo.WindowHeight() / (2 * float32(len(mcs.cellMap[x])))) * float32((y*2 + 1))}, size, mcs.cellMap[x][y])
 		}
 	}
 }
 
-func newCell(world *ecs.World, position engo.Point, size float32) {
+func newCell(world *ecs.World, position engo.Point, size float32, cellType int) {
 	// Entities must be initiated
 	cell := MapCell{BasicEntity: ecs.NewBasic()}
 
@@ -88,16 +105,20 @@ func newCell(world *ecs.World, position engo.Point, size float32) {
 	}
 
 	// Setting up Render Component
-
-	texture, err := common.LoadedSprite("textures/Ant.png")
-
-	if err != nil {
-		fmt.Println("Unable to load texture: " + err.Error())
+	cell.RenderComponent = common.RenderComponent{
+		Drawable: common.Rectangle{},
+		Scale:    engo.Point{0.98, 0.98},
+		Color:    color.White,
 	}
 
-	cell.RenderComponent = common.RenderComponent{
-		Drawable: texture,
-		Scale:    engo.Point{0.5, 0.5},
+	if cellType != 0 {
+		fmt.Println("Found the goal:", cellType)
+	}
+
+	cell.CellComponent = CellComponent{
+		ants:      0,
+		pheromone: 0,
+		cellType:  cellType,
 	}
 
 	// Adding the entity to the RenderSystem
@@ -105,6 +126,8 @@ func newCell(world *ecs.World, position engo.Point, size float32) {
 		switch sys := system.(type) {
 		case *common.RenderSystem:
 			sys.Add(&cell.BasicEntity, &cell.RenderComponent, &cell.SpaceComponent)
+		case *PainterSystem:
+			sys.Add(&cell.BasicEntity, &cell.RenderComponent, &cell.CellComponent, &cell.SpaceComponent)
 		}
 	}
 
