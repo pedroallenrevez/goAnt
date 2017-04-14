@@ -48,12 +48,34 @@
 	new and because of that, tend to devise ways of doing things from the ground up. More 
 	times than we realize, a lot of these problems have already been solved in one way or
 	another in Nature. Routing and path finding are a good example of this, in the natural 
-	world this problem has been solved by ants. Ants are limited animals, they do not possess
-	eyes nor any other mechanisms for long range orientation like ultra-sounds, they only
-	have *TODO*. With these limitations (and due to the laws of evolution (TODO, is right term?)) they 
-	evolved in a way that utilizes these limited sensing abilities in an optimal way.
+	world this problem has been solved by ants. Ants are limited animals, they only possess
+    compound eyes (excel only at detecting movement) with some species being completely blind.
+    In addition they also lack any other mechanisms for long range orientation like ultra-sounds, 
+    relying mostly on their antennae ("feelers") for guidance.
+	With these limitations ants evolved in a way that utilizes these limited sensing abilities 
+    in an optimal way. (TODO, mau frasing)
+
+        In the natural world, some species of ants wander away from their colony randomly until 
+    they find food, when they do, they return to the colony while laying down pheromone trails.
+    Ants can use their antennae to sense these pheromones. If a wandering ant finds pheromones
+    they will follow this path, and if they find food at the end of it, they'll reinforce the 
+    trail when returning to the colony. As time passes these pheromones evaporate, which 
+    guarantees that if a path isn't reinforced, because it doesn't have food at the end or there
+    is a shorter path with more ants reinforcing it, it will fade away. In the end, this 
+    means that when one ant finds a good (short) path from the colony to food, other ants are
+    likely to follow that path. Ultimately, through reinforcement of the trail all ants will
+    converge to a single path.
 	
-	    It is easy to understand the parallels that can be drawn between an ant and an agent.    Both,
+	    It is easy to understand where the parallels can be drawn between an ant and an autonomous 
+    agent in the context of multi-agent systems. Both of them are reactive, pro-active and
+    social, furthermore, the ant's antennae could be compared to an agent's sensors and 
+    most importantly, ants (like agents) demonstrate behaviour designed to achieve a common goal. 
+    The Ant Colony Optimization algorithm consists on "translating" this natural behaviour
+    of the ants into a computer algorithm. In the case of the ACO algorithm, each ant is 
+    exactly an autonomous agent whose work is inserted into a organization (the ant colony) 
+    that manages the relation between agents and ensures the qualities and outcomes of the 
+    system. This implies exogenous synchronisation of the agents (handled by the organization 
+    and not from within the agents).
 	
 %------------------------------------------------------------------------- 
 \Section{Ant Colony Optimization}
@@ -81,11 +103,46 @@
 %------------------------------------------------------------------------- 
 \Section{Visualizer}
 
+         Parallel to the implementation of the algorithm we also developed a visualizer for
+    our implementation of the ACO algorithm. We put special attention into separating the
+    behaviour of both parts, the objective was for the implementation of the ACO not to
+    be limited by the behaviour of a simulation. Ultimately the ACO implementation can
+    be used to solve real-world problems and this solution is then interpreted by the visualizer
+    to provide a visual representation of the algorithm in action.
+    
+
 %------------------------------------------------------------------------- 
 \SubSection{Overview}
 
-%------------------------------------------------------------------------- 
-\SubSection{Interaction with ACO}
+        There were two major functions that the visualizer had to fulfill: Being fully 
+    independent from the implementation and providing an acurate representation of the algorithm
+    in action. To facilitate development and integration with our implementation of ACO we 
+    decided to continue development in Golang. Unfortunately, the Golang standard libraries
+    aren't fit for developing graphical applications. We decided to use an open source framework
+    called Engo which implements the basics of a Entity-Component-System game engine. 
+
+        Using this framework as a basis we developed several systems from the ground up 
+    to import, process and play the results of an execution of the algorithm. We designed
+    an API for the ACO class that allows the vizualizer to request information of the map and
+    result per iteration (opposed to only providing the final solution). 
+
+        There are three systems responsible for the interpretation of the algorithm:
+
+    \begin{itemize}
+        \item Map Creator
+        \item Painter
+        \item Player
+    \end{itemize}
+
+        When the vizualizer is initialized it imports the ACO library and runs the algorithm 
+    with the specified parameters. After the algorithm has finished running the map and
+    the results for each ant interation are imported into the visualizer. Afterwards, the Map Creator
+    system is responsible for importing, interpreting and converting the map it into a format that is 
+    shared throughout the other systems. The Player system reads the results from the ants iterativelly
+    and updates the position of the ants in the shared data structure. Finally the painter system
+    runs every frame scanning through all the cells in the shared data structure trying to find
+    changes. If any of the ants positions has changed or a pheromone has been dropped, the painter
+    will paint the corresponding cell of the map with the correct color to represent the new status.
 
 %------------------------------------------------------------------------- 
 \Section{Optimizations}
