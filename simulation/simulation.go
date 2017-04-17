@@ -4,6 +4,7 @@ import (
 	"engo.io/ecs"
 	"engo.io/engo"
 	"engo.io/engo/common"
+	"github.com/pedroallenrevez/goAnt/aco"
 	"github.com/pedroallenrevez/goAnt/simulation/systems"
 	"image/color"
 )
@@ -44,26 +45,29 @@ func (sc *myScene) Setup(world *ecs.World) {
 
 	common.SetBackground(color.Black)
 
+	//Initialize ACO script
+	acoInstance := aco.AntColonyOptimization{}
+	acoInstance.Init(2, 10, 2)
+	//cellMap, mapToMap := acoInstance.ExportMap()
+	cellMap, _ := acoInstance.ExportMap()
+
 	// Systems need to be added to the world
 	world.AddSystem(&common.RenderSystem{})
 	world.AddSystem(&common.MouseSystem{})
-
-	//TODO all ACO execution should be done on setup
-	//and parameters sent to corresponding systems on
-	//initialization
 
 	// Initialize custom systems last to make sure their
 	// depencies are already initialized
 	// world.AddSystem(&systems.AntCreatorSystem{})
 	world.AddSystem(&systems.PainterSystem{})
-	world.AddSystem(&systems.MapCreatorSystem{})
+	world.AddSystem(&systems.MapCreatorSystem{CellMap: cellMap})
+
 }
 
 func main() {
 	opts := engo.RunOptions{
 		Title:  "Hello World",
-		Width:  400,
-		Height: 400,
+		Width:  800,
+		Height: 800,
 	}
 
 	engo.Run(opts, &myScene{})
