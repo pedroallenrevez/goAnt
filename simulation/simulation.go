@@ -4,6 +4,7 @@ import (
 	"engo.io/ecs"
 	"engo.io/engo"
 	"engo.io/engo/common"
+	"fmt"
 	"github.com/pedroallenrevez/goAnt/aco"
 	"github.com/pedroallenrevez/goAnt/simulation/systems"
 	"image/color"
@@ -45,12 +46,32 @@ func (sc *myScene) Setup(world *ecs.World) {
 
 	common.SetBackground(color.Black)
 
+	//seconds each round lasts in AntMover
+	seconds := float32(0.5)
+
 	//Initialize ACO script
 	acoInstance := aco.AntColonyOptimization{}
-	acoInstance.Init(2, 10, 2)
+	acoInstance.Init(8, 20, 4)
 	//cellMap, mapToMap := acoInstance.ExportMap()
-	cellMap, _ := acoInstance.ExportMap()
+	cellMap, mapToMap := acoInstance.ExportMap()
 
+	acoInstance.Run()
+	antRoutes := acoInstance.ExportRoutes()
+
+	for _, ant := range antRoutes {
+		fmt.Println("ant:")
+		fmt.Println(ant)
+		for iteration := range ant {
+
+			ant[iteration] = append([]int{0}, ant[iteration]...)
+			ant[iteration] = append(ant[iteration], reverseArray(ant[iteration])[1:]...)
+		}
+	}
+
+	for _, ant := range antRoutes {
+		fmt.Println("ant:")
+		fmt.Println(ant)
+	}
 	// Systems need to be added to the world
 	world.AddSystem(&common.RenderSystem{})
 	world.AddSystem(&common.MouseSystem{})
@@ -59,6 +80,7 @@ func (sc *myScene) Setup(world *ecs.World) {
 	// depencies are already initialized
 	// world.AddSystem(&systems.AntCreatorSystem{})
 	world.AddSystem(&systems.PainterSystem{})
+	world.AddSystem(&systems.AntMoverSystem{Routes: antRoutes, IDtoMap: mapToMap, SecondsPerRound: seconds})
 	world.AddSystem(&systems.MapCreatorSystem{CellMap: cellMap})
 
 }
@@ -72,4 +94,13 @@ func main() {
 
 	engo.Run(opts, &myScene{})
 
+}
+
+func reverseArray(route []int) []int {
+	result := make([]int, len(route))
+	for i, j := len(route)-1, 0; i >= 0; i, j = i-1, j+1 {
+		result[j] = route[i]
+	}
+	fmt.Println("Reversed:", route, " into:", result)
+	return result
 }

@@ -44,6 +44,8 @@ const (
 	GOAL
 	NEST
 	OBSTACLE
+	ANT
+	PHEROMONE
 )
 
 // This type is a component to be added to cells
@@ -81,12 +83,12 @@ func (mcs *MapCreatorSystem) New(ecsWorld *ecs.World) {
 	for x := range mcs.CellMap {
 		for y := range mcs.CellMap[x] {
 			//calculate x and y depending on number of cells
-			newCell(ecsWorld, engo.Point{(engo.WindowWidth() / (2 * float32(len(mcs.CellMap)))) * float32((x*2 + 1)), (engo.WindowHeight() / (2 * float32(len(mcs.CellMap[x])))) * float32((y*2 + 1))}, size, mcs.CellMap[x][y])
+			newCell(ecsWorld, engo.Point{(engo.WindowWidth() / (2 * float32(len(mcs.CellMap)))) * float32((x*2 + 1)), (engo.WindowHeight() / (2 * float32(len(mcs.CellMap[x])))) * float32((y*2 + 1))}, size, mcs.CellMap[x][y], x, y)
 		}
 	}
 }
 
-func newCell(world *ecs.World, position engo.Point, size float32, cellType int) {
+func newCell(world *ecs.World, position engo.Point, size float32, cellType int, x int, y int) {
 	// Entities must be initiated
 	cell := MapCell{BasicEntity: ecs.NewBasic()}
 
@@ -123,7 +125,7 @@ func newCell(world *ecs.World, position engo.Point, size float32, cellType int) 
 			sys.Add(&cell.BasicEntity, &cell.RenderComponent, &cell.CellComponent, &cell.SpaceComponent)
 
 		case *AntMoverSystem:
-			sys.Add(&cell.BasicEntity, &cell.RenderComponent, &cell.CellComponent, &cell.SpaceComponent)
+			sys.Add(&cell.BasicEntity, &cell.RenderComponent, &cell.CellComponent, &cell.SpaceComponent, x, y)
 		}
 	}
 
