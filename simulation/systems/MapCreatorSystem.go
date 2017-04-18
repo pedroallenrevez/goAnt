@@ -83,12 +83,12 @@ func (mcs *MapCreatorSystem) New(ecsWorld *ecs.World) {
 
 	// Calculate cell size
 	size := engo.WindowWidth() / float32(len(mcs.cellMap))
-	size *= 0.9
 
 	for x := range mcs.cellMap {
 		for y := range mcs.cellMap[x] {
 			//calculate x and y depending on number of cells
-			newCell(ecsWorld, engo.Point{(engo.WindowWidth() / (2 * float32(len(mcs.cellMap)))) * float32((x*2 + 1)), (engo.WindowHeight() / (2 * float32(len(mcs.cellMap[x])))) * float32((y*2 + 1))}, size, mcs.cellMap[x][y])
+			//recaulculate point bs
+			newCell(ecsWorld, engo.Point{size * x, size * y}, size, 0)
 		}
 	}
 }
