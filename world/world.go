@@ -257,7 +257,7 @@ func (w *WorldImpl) genObstacles() {
 		}
 		if value.x > 3 && value.x < w.size-3 && value.y > 3 && value.y < w.size-3 {
 			coinToss := rand.Float64()
-			if coinToss > 0.20 {
+			if coinToss > 0.10 {
 				continue
 			} else {
 				//check neighbours and erase connections to them
@@ -278,11 +278,14 @@ func (w *WorldImpl) genObstacles() {
 					//erase own neighbours
 					w.antMap[n].neighbours = nil
 				}
+				w.antMap[key].neighbours = nil
 			}
 		}
 	}
-	fmt.Println("obstaculoooooooooooooooooos")
-	fmt.Println(w.size, w.antMap)
+	fmt.Println("obstaculos")
+	for _, value := range w.antMap {
+		fmt.Println(value)
+	}
 }
 
 func (w *WorldImpl) getPheromone(start NodeID, end NodeID) PheromoneValue {

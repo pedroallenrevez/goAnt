@@ -56,20 +56,17 @@ func (ant *Ant) pickPath() world.Node {
 	// termination cases
 	// if node not connected to anyone but last
 	var nodes = ant.world.PossibleMoves(ant.location)
-	for i, node := range nodes {
-		if node.ID == ant.previous {
-			//slice trick to delete element at i position
-			nodes = append(nodes[:i], nodes[i+1:]...)
+	fmt.Println("possibles moves", nodes)
+	var previous world.Node
+	if nodes != nil {
+		for i, node := range nodes {
+			if node.ID == ant.previous {
+				//slice trick to delete element at i position
+				previous = node
+				nodes = append(nodes[:i], nodes[i+1:]...)
+			}
 		}
 	}
-	// possible moves - previous
-	/*
-		if ant.firstPass {
-			//fmt.Println(nodes)
-			//choose randomly even from all nodes
-			return nodes[randInt(0, len(nodes))]
-		}
-	*/
 
 	interval := make([]float64, len(nodes))
 	accumulate := 0.0
@@ -93,7 +90,7 @@ func (ant *Ant) pickPath() world.Node {
 	}
 
 	fmt.Println("REACHING THE ENDREACHING THE END")
-	return nodes[0]
+	return previous
 }
 
 // traverse
@@ -113,49 +110,26 @@ func (ant *Ant) traverse(start world.NodeID, end world.Node) {
 func (ant *Ant) isGoal(node world.NodeID) {
 
 	if ant.world.IsGoal(node) {
-		fmt.Print("route switch")
 		ant.tourComplete = true
 	}
 }
 
 //Run returns a list of node ids
 func (ant *Ant) Run(channel chan []world.NodeID) {
-	//GO ROUTINE
 	//run until tour is complete
 	for !ant.tourComplete {
-		//next node
 		var next = ant.pickPath()
-		//fmt.Print("next node is: ")
-		//fmt.Println(next)
 		ant.traverse(ant.location, next)
 		ant.isGoal(next.ID)
 	}
 	//loop deletion
-	fmt.Println("deleting")
 	ant.route = ant.loopDeletion(ant.route)
-	fmt.Println("deleted")
-	fmt.Println(ant.route)
 	ant.firstPass = false
 
 	channel <- ant.route
 }
 
 func (ant *Ant) loopDeletion(nodes []world.NodeID) []world.NodeID {
-	/*
-		for i, nodei := range nodes {
-			for j, nodej := range nodes {
-				if nodei == nodej {
-					fmt.Println("equal id")
-					//delete everything between i+1 till j
-					slice1 := ant.route[:i]
-					slice2 := ant.route[j:]
-					result := append(slice1, slice2...)
-					ant.loopDeletion(result)
-				}
-			}
-		}
-		return nodes
-	*/
 	result := make([]world.NodeID, 0)
 	for _, node := range nodes {
 		if index, ok := inList(node, result); ok {
