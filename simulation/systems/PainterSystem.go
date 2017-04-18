@@ -8,7 +8,7 @@ import (
 )
 
 type PainterSystem struct {
-	cells []cellEntity
+	Cells []cellEntity
 }
 
 type cellEntity struct {
@@ -28,7 +28,7 @@ func (ps *PainterSystem) Update(dt float32) {
 
 	//TODO, why color all cells? keep status and only color the ones who change
 
-	for _, cell := range ps.cells {
+	for _, cell := range ps.Cells {
 		if cell.cellType == NORMAL {
 			cellColor = color.RGBA{255, 255, 255, 255}
 		} else if cell.cellType == GOAL {
@@ -50,6 +50,5 @@ func (ps *PainterSystem) New(world *ecs.World) {
 
 // Called to add entities to the system
 func (ps *PainterSystem) Add(basic *ecs.BasicEntity, render *common.RenderComponent, cell *CellComponent, space *common.SpaceComponent) {
-	fmt.Println("Added cell:", cell.cellType)
-	ps.cells = append(ps.cells, cellEntity{*basic, render, *space, *cell})
+	ps.Cells = append(ps.Cells, cellEntity{*basic, render, *space, *cell})
 }
