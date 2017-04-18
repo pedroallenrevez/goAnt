@@ -81,7 +81,7 @@ func (mcs *MapCreatorSystem) New(ecsWorld *ecs.World) {
 		for y := range mcs.CellMap[x] {
 			//calculate x and y depending on number of cells
 			//recaulculate point bs
-			newCell(ecsWorld, engo.Point{size * x, size * y}, size, 0)
+			newCell(ecsWorld, engo.Point{size * x, size * y}, size, mcs.CellMap[x][y])
 		}
 	}
 }
