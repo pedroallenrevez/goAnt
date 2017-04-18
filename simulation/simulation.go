@@ -48,6 +48,10 @@ func (sc *myScene) Setup(world *ecs.World) {
 	world.AddSystem(&common.RenderSystem{})
 	world.AddSystem(&common.MouseSystem{})
 
+	//TODO all ACO execution should be done on setup
+	//and parameters sent to corresponding systems on
+	//initialization
+
 	// Initialize custom systems last to make sure their
 	// depencies are already initialized
 	// world.AddSystem(&systems.AntCreatorSystem{})
