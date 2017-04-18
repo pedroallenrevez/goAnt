@@ -8,6 +8,8 @@ import (
 	"github.com/pedroallenrevez/goAnt/aco"
 	"github.com/pedroallenrevez/goAnt/simulation/systems"
 	"image/color"
+	"os"
+	"strconv"
 )
 
 // BASICS:
@@ -47,11 +49,17 @@ func (sc *myScene) Setup(world *ecs.World) {
 	common.SetBackground(color.Black)
 
 	//seconds each round lasts in AntMover
-	seconds := float32(0.5)
+	seconds, _ := strconv.ParseFloat(os.Args[4], 32)
 
 	//Initialize ACO script
 	acoInstance := aco.AntColonyOptimization{}
-	acoInstance.Init(8, 20, 4)
+	antNum, _ := strconv.Atoi(os.Args[1])
+	mapSize, _ := strconv.Atoi(os.Args[2])
+	iterNum, _ := strconv.Atoi(os.Args[3])
+
+	fmt.Println("STARTING WITH ANTS:", antNum, " MAP:", mapSize, " ITER:", iterNum)
+
+	acoInstance.Init(antNum, mapSize, iterNum)
 	//cellMap, mapToMap := acoInstance.ExportMap()
 	cellMap, mapToMap := acoInstance.ExportMap()
 
@@ -59,18 +67,11 @@ func (sc *myScene) Setup(world *ecs.World) {
 	antRoutes := acoInstance.ExportRoutes()
 
 	for _, ant := range antRoutes {
-		fmt.Println("ant:")
-		fmt.Println(ant)
 		for iteration := range ant {
 
 			ant[iteration] = append([]int{0}, ant[iteration]...)
 			ant[iteration] = append(ant[iteration], reverseArray(ant[iteration])[1:]...)
 		}
-	}
-
-	for _, ant := range antRoutes {
-		fmt.Println("ant:")
-		fmt.Println(ant)
 	}
 	// Systems need to be added to the world
 	world.AddSystem(&common.RenderSystem{})
@@ -80,7 +81,7 @@ func (sc *myScene) Setup(world *ecs.World) {
 	// depencies are already initialized
 	// world.AddSystem(&systems.AntCreatorSystem{})
 	world.AddSystem(&systems.PainterSystem{})
-	world.AddSystem(&systems.AntMoverSystem{Routes: antRoutes, IDtoMap: mapToMap, SecondsPerRound: seconds})
+	world.AddSystem(&systems.AntMoverSystem{Routes: antRoutes, IDtoMap: mapToMap, SecondsPerRound: float32(seconds)})
 	world.AddSystem(&systems.MapCreatorSystem{CellMap: cellMap})
 
 }
