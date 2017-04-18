@@ -1,7 +1,7 @@
 package world
 
 import (
-	//	"fmt"
+	"fmt"
 	"github.com/op/go-logging"
 	"math/rand"
 )
@@ -43,6 +43,7 @@ type cell struct {
 	ants       int
 	neighbours []NodeID
 	goal       bool
+	obstacle   bool
 	x          int
 	y          int
 }
@@ -108,6 +109,7 @@ func (w *WorldImpl) Init(size int, funcArg func(Point, Point) float64) {
 		return NodeID(startingID)
 	}
 
+	// TODO if obstacle dont calculate neighbours
 	calcNeighbours := func(x, y, size int, node int) []NodeID {
 		slice := make([]NodeID, 0, 8)
 		if x-1 >= 0 {
@@ -146,6 +148,7 @@ func (w *WorldImpl) Init(size int, funcArg func(Point, Point) float64) {
 	for y := 0; y < size; y++ {
 		for x := 0; x < size; x++ {
 			index := createUniqueID()
+
 			antMap[index] = &cell{
 				id:         index,
 				ants:       0,
@@ -178,6 +181,7 @@ func (w *WorldImpl) Init(size int, funcArg func(Point, Point) float64) {
 	w.distance = funcArg
 	//copy one to updatedPheroMap
 	//assign function
+	w.genObstacles()
 }
 
 // PossibleMoves Given a NodeID returns the possible moves the ant can make from
@@ -221,7 +225,7 @@ func (w *WorldImpl) IsGoal(node NodeID) bool {
 
 // UpdatePheromones decays the map with decay constant
 func (w *WorldImpl) UpdatePheromones() {
-	for pair, _ := range w.updatedPheroMap {
+	for pair := range w.updatedPheroMap {
 		w.pheroMap[pair] *= decayFactor
 		if updatedVal, ok := w.updatedPheroMap[pair]; ok {
 			w.pheroMap[pair] += updatedVal
@@ -240,6 +244,45 @@ func (w *WorldImpl) getCell(node NodeID) *cell {
 	log.Critical("Nodeid", node, " does not exist! Of course i can't get this cell!")
 	//TODO
 	panic("This should never have happened... CALL A MEDIC!")
+}
+
+func (w *WorldImpl) genObstacles() {
+	for key, value := range w.antMap {
+		//make sure its not next or goal
+		if value.x == 0 && value.y == 0 {
+			continue
+		}
+		if value.goal {
+			continue
+		}
+		if value.x > 3 && value.x < w.size-3 && value.y > 3 && value.y < w.size-3 {
+			coinToss := rand.Float64()
+			if coinToss > 0.20 {
+				continue
+			} else {
+				//check neighbours and erase connections to them
+				// this is an obstacle and i spread it to my
+				// neighbouts
+				w.antMap[key].obstacle = true
+				fmt.Println(value.id)
+				for _, n := range w.antMap[key].neighbours {
+					w.antMap[n].obstacle = true
+					//delete myself from others
+					for i, val := range w.antMap[n].neighbours {
+						if val == w.antMap[n].id {
+							w.antMap[n].neighbours = append(w.antMap[n].neighbours[:i], w.antMap[n].neighbours[i+1:]...)
+						}
+
+					}
+					//JISATSU
+					//erase own neighbours
+					w.antMap[n].neighbours = nil
+				}
+			}
+		}
+	}
+	fmt.Println("obstaculoooooooooooooooooos")
+	fmt.Println(w.size, w.antMap)
 }
 
 func (w *WorldImpl) getPheromone(start NodeID, end NodeID) PheromoneValue {
