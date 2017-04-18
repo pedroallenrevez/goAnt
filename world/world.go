@@ -1,6 +1,7 @@
 package world
 
 import (
+	//	"fmt"
 	"github.com/op/go-logging"
 	"math/rand"
 )
@@ -78,7 +79,9 @@ type World interface {
 	PutPheromone(NodeID, NodeID)
 	UpdatePheromones()
 	IsGoal(NodeID) bool
+	GetPheroMap() map[nodePair]PheromoneValue
 	ExportMap() ([][]int, map[int][2]int)
+	ExportPheromones() [][]float64
 	Init(int, func(Point, Point) float64)
 }
 
@@ -89,13 +92,14 @@ type WorldImpl struct {
 	pheroMap        map[nodePair]PheromoneValue
 	updatedPheroMap map[nodePair]PheromoneValue
 	distance        calculateDistance
+	size            int
 }
 
 //Init Initializes world with matrix size and a distance function
 func (w *WorldImpl) Init(size int, funcArg func(Point, Point) float64) {
 	//generate aNtMap
 	antMap := make(map[NodeID]*cell)
-
+	w.size = size
 	//starts at -1 so ID 0 is the first
 	startingID := -1
 
@@ -217,12 +221,13 @@ func (w *WorldImpl) IsGoal(node NodeID) bool {
 
 // UpdatePheromones decays the map with decay constant
 func (w *WorldImpl) UpdatePheromones() {
-	for pair, pheromone := range w.pheroMap {
-		pheromone *= decayFactor
+	for pair, _ := range w.updatedPheroMap {
+		w.pheroMap[pair] *= decayFactor
 		if updatedVal, ok := w.updatedPheroMap[pair]; ok {
-			pheromone += updatedVal
-		} else if updatedVal, ok := w.updatedPheroMap[pair.invert()]; ok {
-			pheromone += updatedVal
+			w.pheroMap[pair] += updatedVal
+		}
+		if updatedVal, ok := w.updatedPheroMap[pair.invert()]; ok {
+			w.pheroMap[pair] += updatedVal
 		}
 	}
 }
@@ -295,4 +300,22 @@ func (w WorldImpl) ExportMap() ([][]int, map[int][2]int) {
 
 	return result, hashtable
 
+}
+func (w WorldImpl) ExportPheromones() [][]float64 {
+	result := make([][]float64, w.size)
+	for i := range result {
+		result[i] = make([]float64, w.size)
+	}
+
+	for key, value := range w.pheroMap {
+		prevCell := w.antMap[key.previous]
+		nextCell := w.antMap[key.next]
+		result[prevCell.x][prevCell.y] += float64(value)
+		result[nextCell.x][nextCell.y] += float64(value)
+	}
+	return result
+
+}
+func (w WorldImpl) GetPheroMap() map[nodePair]PheromoneValue {
+	return w.pheroMap
 }

@@ -9,6 +9,10 @@
 \documentclass[times, 10pt,twocolumn]{article}
 \usepackage{latex8} \usepackage{times}
 \usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{mathtools}
+
+
 
 %\documentstyle[times,art10,twocolumn,latex8]{article}
 
@@ -83,22 +87,38 @@
 	
 
 %------------------------------------------------------------------------- 
-\SubSection{Overview}
-
+\SubSection{Natural Optimization Algorithm}
+Being inspired by the behaviour of ants on a naturally occuring process, the Ant Colony Optimization algorithm is a probablistic thechnique used in solving computational problems that can be reduced to finding good paths through grahps, and we classified it as a natural optimization algorithm. The ants wander aimlessly around until they find food, returning to their colony leaving pheromone trails behind. The other ants can detect the pheromones laid on the ground and can follow it to find food themselves. This property is called \textbf{Stygmergy}, and is what allows this algorithm to be fit for a Multi Agent System environment. Agents interact through the environment without needing direct communication, and requiring no planning. The more ants a colony has, the more attractive the paths are going to become - this \textbf{Autocatalytic} emerging propoerty allows the set of agents to scale realy well towards finding a solution in the shortest distance possible. The comparison between ammount of energy spent and food reward, drawn from a real life scenario, provides a metaheurisitic optimization solution towards finding the shortest path in various types of environments and problems.
 	
-%------------------------------------------------------------------------- 
-\SubSection{Biological Inspiration}
-
 	 
 %------------------------------------------------------------------------- 
-\SubSection{Stocastic Model}
-	
+\SubSection{Ants}
+
+The ant worker agents exhibit two behaviours during the algorithm, \textbf{forward} mode and \textbf{backward} mode. 
+
+
+In forward mode the ants evaluate all neighbouring nodes (exlcluding the last visited node) and calculate the probability to traverse a node according to the ammount of pheromone laid on the path
+% insert formula here
+where tau is the ammount of pheromone laid between x and y, and eta is the desirability of the path, usually being a distance function 1/distance\_{x,y}, defining the \textit{a priori} attractiveness of the path. Alpha and beta are both experimental values used to control the influence of the two factors.
+
+
+When the ant finds food, it enter backward mode. It starts retracing its steps back to the colony leaving a pheromone trail behind. The ants do this multiple times until they converge into a solution.
+%pseudo codigo das ants
+
 %------------------------------------------------------------------------- 
-\SubSection{Ants and Pheromones}
+\SubSection{Problems and optimizations}
+With the immense diversity of graphs, sometimes ants enter a loop, because the pheromone becomes stronger and stronger, using its positive feedback in a bad way making our agents stuck, even worse when retracing its steps back, doing the same loop again and laying dangerous pheromones that could derail our other agents. To tackle this problem a loop deletion optimization technique was used. When an ant finds food, before returning to the colony, the route travelled by the ant is checked for loops, and eliminates them. This produces a much more natural flow to the agents.
+
+%insert pheromone pseudo
+Over time some trails may also become predominant due to the effect of pheromones. This can lead to a problem called \textbf{missed opportunity} where the ants may just miss a path that is shorter because it isn't that attractive. To solve this a global pheromone decay was used. When all the ants finish their tours, the pheromone value of each node is udpated according to 
+% insert formula here
+where ro is the evaporation coefficient and delta tau is the ammount of pheromone deposited by the kth ant.
+
+
 
 %------------------------------------------------------------------------- 
 \SubSection{Applications of the Algorithm}
-	All the different areas
+	The Ant Colony Algorithm belongs 
 	
 %------------------------------------------------------------------------- 
 \Section{Visualizer}

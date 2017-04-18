@@ -14,14 +14,17 @@ type ACOInterface interface {
 	Run()
 	ExportMap() ([][]int, map[int][2]int)
 	ExportRoutes() [][][]int
+	ExportPheromones() [][][]float64
 }
 
 //AntColonyOptimization struct for the algorithm
 type AntColonyOptimization struct {
-	world       world.World
-	antArray    []*ants.Ant
-	iterations  int
-	routeMatrix [][][]int
+	world           world.World
+	size            int
+	antArray        []*ants.Ant
+	iterations      int
+	routeMatrix     [][][]int
+	pheromoneMatrix [][][]float64
 }
 
 //Init initializes the ACO
@@ -33,7 +36,7 @@ func (aco *AntColonyOptimization) Init(kants, size, iterations int) {
 
 	//ANT
 	var antArray = make([]*ants.Ant, kants)
-
+	aco.size = size
 	//distance callback
 	euclidean := func(start, end world.Point) float64 {
 		distanceX := math.Abs(float64(start.X - end.X))
@@ -55,6 +58,14 @@ func (aco *AntColonyOptimization) Init(kants, size, iterations int) {
 		aco.routeMatrix[i] = make([][]int, iterations)
 		for j := range aco.routeMatrix[i] {
 			aco.routeMatrix[i][j] = make([]int, 0)
+		}
+	}
+	//phe matrix init
+	aco.pheromoneMatrix = make([][][]float64, iterations)
+	for i := range aco.pheromoneMatrix {
+		aco.pheromoneMatrix[i] = make([][]float64, size)
+		for j := range aco.pheromoneMatrix[i] {
+			aco.pheromoneMatrix[i][j] = make([]float64, size)
 		}
 	}
 	aco.antArray = antArray
@@ -88,8 +99,16 @@ func (aco *AntColonyOptimization) Run() {
 			}
 
 		}
+		//pheromone snapshot
 		aco.world.UpdatePheromones()
+		snapshot := aco.world.ExportPheromones()
+		for i := 0; i < aco.size; i++ {
+			for j := 0; j < aco.size; j++ {
+				aco.pheromoneMatrix[iter][i][j] = snapshot[i][j]
+			}
+		}
 	}
+
 }
 
 //ExportMap exports the map used by the algorithm to use in the simulation
@@ -101,4 +120,9 @@ func (aco AntColonyOptimization) ExportMap() ([][]int, map[int][2]int) {
 func (aco AntColonyOptimization) ExportRoutes() [][][]int {
 	//order of routes is cagative for simulation
 	return aco.routeMatrix
+}
+
+//ExportPheromones dfa
+func (aco AntColonyOptimization) ExportPheromones() [][][]float64 {
+	return aco.pheromoneMatrix
 }
