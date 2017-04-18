@@ -3,7 +3,6 @@ package systems
 import (
 	"engo.io/ecs"
 	"engo.io/engo/common"
-	"fmt"
 	"image/color"
 )
 
@@ -14,8 +13,8 @@ type PainterSystem struct {
 type cellEntity struct {
 	ecs.BasicEntity
 	*common.RenderComponent
-	common.SpaceComponent
-	CellComponent
+	*common.SpaceComponent
+	*CellComponent
 }
 
 // Called when entity is removed from the world so
@@ -29,14 +28,18 @@ func (ps *PainterSystem) Update(dt float32) {
 	//TODO, why color all cells? keep status and only color the ones who change
 
 	for _, cell := range ps.Cells {
-		if cell.cellType == NORMAL {
-			cellColor = color.RGBA{255, 255, 255, 255}
+		if cell.ants > 0 {
+			cellColor = color.RGBA{0, 255, 0, 255}
 		} else if cell.cellType == GOAL {
 			cellColor = color.RGBA{255, 0, 0, 255}
 		} else if cell.cellType == NEST {
 			cellColor = color.RGBA{0, 255, 0, 255}
 		} else if cell.cellType == OBSTACLE {
 			cellColor = color.RGBA{0, 0, 255, 255}
+		} else if cell.pheromone > 0.4 {
+			cellColor = color.RGBA{200, 0, 0, uint8(min(255, cell.pheromone*20))}
+		} else if cell.cellType == NORMAL {
+			cellColor = color.RGBA{255, 255, 255, 255}
 		}
 
 		cell.RenderComponent.Color = cellColor
@@ -50,5 +53,12 @@ func (ps *PainterSystem) New(world *ecs.World) {
 
 // Called to add entities to the system
 func (ps *PainterSystem) Add(basic *ecs.BasicEntity, render *common.RenderComponent, cell *CellComponent, space *common.SpaceComponent) {
-	ps.Cells = append(ps.Cells, cellEntity{*basic, render, *space, *cell})
+	ps.Cells = append(ps.Cells, cellEntity{*basic, render, space, cell})
+}
+
+func min(a float32, b float32) float32 {
+	if a > b {
+		return b
+	}
+	return a
 }
